@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Oil Well Production Predictor</title>
+    <style>
+        body {
+            background-image: url('/static/bg.jpg'); /* Replace with your background */
+            background-size: cover;
+            background-position: center;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            margin: 10% auto;
+            padding: 40px;
+            border-radius: 15px;
+            width: 400px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 90%;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #00b894;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #019875;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Oil Well Production Prediction</h2>
+        <form action="/predict" method="post">
+            <input type="text" name="Liquid Volume (m3/day)" placeholder="Enter Liquid volume" required><br>
+            <input type="text" name="Gas Volume (m3/day)" placeholder="Enter Gas volume" required><br>
+            <input type="text" name="Water Volume (m3/day)" placeholder="Enter water volume" required><br>
+            <input type="text" name="Water Cut (%)" placeholder="Enter water cut" required><br>
+            <input type="text" name="Working Hours" placeholder="Enter working hours" required><br>
+            <input type="text" name="Dynamic Level (m)" placeholder="Enter dynamic level" required><br>
+            <input type="text" name="Reservoir Pressure (atm)" placeholder="Enter reserviour pressure" required><br>
+
+            <!-- Add/remove fields as per your model -->
+            <input type="submit" value="Predict">
+        </form>
+        <h3>{{ prediction_text }}</h3>
+    </div>
+</body>
+</html>
