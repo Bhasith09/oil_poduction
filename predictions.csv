@@ -1,0 +1,6 @@
+Liquid Volume,Gas Volume,Water Volume,Water Cut (%),Working Hours,Dynamic Level,Reservoir Pressure,Prediction,Anomaly Status
+70.0,13055.0,21.0,29.0,24.0,1819.0,214.0,48.94,✅ Production is normal.
+20.0,13050.0,15.0,70.0,27.0,2101.0,100.0,48.61,✅ Production is normal.
+20.0,13055.0,2.0,3.0,3.0,3.0,3.0,48.92,✅ Production is normal.
+1.0,2.0,2.0,2.0,2.0,2.0,2.0,0.84,⚠️ Very Low Production.
+222.0,2.0,2.0,2.0,2.0,2.0,2.0,0.9,⚠️ Very Low Production.

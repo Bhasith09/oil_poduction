@@ -2,109 +2,202 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oil Well Production Predictor</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
         body {
             background-image: url('/static/bg.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
             font-family: Arial, sans-serif;
             color: white;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.85);
             padding: 30px;
             border-radius: 15px;
+            max-width: 850px;
+            margin: auto;
+        }
+
+        input[type="text"], select {
             width: 100%;
-            max-width: 500px;
-            margin: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-
-        h3 {
-            margin-top: 20px;
-            min-height: 24px;
-            font-size: 1.2rem;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        input[type="text"] {
-            padding: 12px;
-            width: 100%;
-            margin: 8px 0;
-            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
             border: none;
             font-size: 1rem;
         }
 
-        input[type="submit"] {
-            padding: 12px 20px;
+        input[type="submit"], .btn {
             background-color: #00b894;
             color: white;
+            padding: 12px;
             border: none;
             border-radius: 8px;
+            margin-top: 15px;
             cursor: pointer;
             font-size: 1rem;
-            margin-top: 10px;
-            transition: background-color 0.3s;
         }
 
-        input[type="submit"]:hover {
-            background-color: #019875;
+        .btn-danger {
+            background-color: #d63031;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-            
-            h2 {
-                font-size: 1.5rem;
-            }
-            
-            input[type="text"] {
-                padding: 10px;
-            }
+        h3, h4 {
+            margin-top: 15px;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: black;
+        }
+
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #eee;
+        }
+
+        .scroll-table {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 300px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Oil Well Production Prediction</h2>
-        <form action="/predict" method="post">
-            <input type="text" name="Liquid Volume (m3/day)" placeholder="Liquid volume (m³/day)" required>
-            <input type="text" name="Gas Volume (m3/day)" placeholder="Gas volume (m³/day)" required>
-            <input type="text" name="Water Volume (m3/day)" placeholder="Water volume (m³/day)" required>
-            <input type="text" name="Water Cut (%)" placeholder="Water cut (%)" required>
-            <input type="text" name="Working Hours" placeholder="Working hours" required>
-            <input type="text" name="Dynamic Level (m)" placeholder="Dynamic level (m)" required>
-            <input type="text" name="Reservoir Pressure (atm)" placeholder="Reservoir pressure (atm)" required>
-            <input type="submit" value="Predict">
-        </form>
-        <h3>{{ prediction_text }}</h3>
+<div class="container">
+    <h2>Oil Well Production Predictor</h2>
+    <form action="/predict" method="post">
+        <input type="text" name="Liquid Volume (m3/day)" placeholder="Liquid Volume (m³/day)" required>
+        <input type="text" name="Gas Volume (m3/day)" placeholder="Gas Volume (m³/day)" required>
+        <input type="text" name="Water Volume (m3/day)" placeholder="Water Volume (m³/day)" required>
+        <input type="text" name="Water Cut (%)" placeholder="Water Cut (%)" required>
+        <input type="text" name="Working Hours" placeholder="Working Hours" required>
+        <input type="text" name="Dynamic Level (m)" placeholder="Dynamic Level (m)" required>
+        <input type="text" name="Reservoir Pressure (atm)" placeholder="Reservoir Pressure (atm)" required>
+        <input type="submit" value="Predict">
+    </form>
+
+    <h3>{{ prediction_text }}</h3>
+    <h3>{{ anomaly_text }}</h3>
+    <h4 style="color: #ffeaa7;">{{ suggestion_text }}</h4>
+
+    <a href="/clear" class="btn btn-danger">Clear History</a>
+
+    {% if predictions %}
+    <label for="xselect">Select X-axis for Chart:</label>
+    <select id="xselect">
+        {% for col in columns %}
+        <option value="{{ col }}">{{ col }}</option>
+        {% endfor %}
+    </select>
+
+    <div style="margin-top: 20px;">
+        <canvas id="predictionChart" width="600" height="300"></canvas>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const records = {{ predictions | tojson }};
+        const select = document.getElementById("xselect");
+        let chart;
+
+        function drawChart(xAxis) {
+            const labels = records.map(r => r[xAxis]);
+            const values = records.map(r => r["Prediction"]);
+
+            const ctx = document.getElementById("predictionChart").getContext("2d");
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Oil Production (m³/day)",
+                        data: values,
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        backgroundColor: "rgba(54, 162, 235, 0.3)",
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { labels: { color: 'black' } }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: xAxis,
+                                color: 'black'
+                            },
+                            ticks: { color: 'black' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "Predicted Oil Production (m³/day)",
+                                color: 'black'
+                            },
+                            beginAtZero: true,
+                            ticks: { color: 'black' }
+                        }
+                    }
+                }
+            });
+        }
+
+        select.addEventListener("change", () => drawChart(select.value));
+        drawChart(select.value);
+    </script>
+
+    <!-- ✅ Scrollable Table -->
+    <h3 style="margin-top: 30px;">📋 Prediction History</h3>
+    <div class="scroll-table">
+        <table>
+            <thead>
+                <tr>
+                    {% for col in columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                    <th>Prediction</th>
+                    <th>Anomaly Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in predictions %}
+                <tr>
+                    {% for col in columns %}
+                    <td>{{ row[col] }}</td>
+                    {% endfor %}
+                    <td>{{ row['Prediction'] }}</td>
+                    <td>{{ row['Anomaly Status'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
 </body>
 </html>
