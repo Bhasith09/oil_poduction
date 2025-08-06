@@ -18,6 +18,9 @@ This project is a Machine Learning-powered web application that predicts oil wel
 ## 📸 Screenshot
 
 ![App Screenshot](static/ss1.png)  
+![App Screenshot](static/ss2.png)  
+![App Screenshot](static/ss3.png)  
+
 > _(Optional: Add a real screenshot of your app here)_
 
 ---
